@@ -3,72 +3,80 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
 from config import TOKEN
-from downloader import download_video, download_audio
+from downloader import download_media
 
-# --- البداية ---
+
+# رسالة البداية
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "👋 اهلا\n\n"
-        "ارسل رابط فيديو من أي منصة وسأقوم بتحميله لك\n\n"
-        "🎥 فيديو\n"
-        "🎵 صوت"
-    )
-
-# --- استقبال الرابط ---
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    url = update.message.text
 
     keyboard = [
-        [InlineKeyboardButton("📥 تحميل فيديو", callback_data=f"video|{url}")],
-        [InlineKeyboardButton("🎵 تحميل صوت MP3", callback_data=f"audio|{url}")]
+        [InlineKeyboardButton("📥 تحميل من رابط", callback_data="download")],
+        [InlineKeyboardButton("ℹ️ مساعدة", callback_data="help")]
     ]
 
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        "🤖 بوت تحميل وسائل التواصل\n\n"
+        "ارسل رابط من:\n"
+        "YouTube\nTikTok\nInstagram\nFacebook\nTwitter\n\n"
+        "وسيتم تحميله مباشرة.",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
 
-    await update.message.reply_text("اختر نوع التحميل:", reply_markup=reply_markup)
 
-# --- الضغط على الأزرار ---
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# الأزرار
+async def buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     query = update.callback_query
     await query.answer()
 
-    action, url = query.data.split("|")
+    if query.data == "download":
+        await query.edit_message_text("📩 أرسل الرابط الآن")
 
-    await query.edit_message_text("⏳ جاري التحميل...")
+    elif query.data == "help":
+        await query.edit_message_text(
+            "📌 طريقة الاستخدام:\n\n"
+            "1- اضغط تحميل\n"
+            "2- أرسل رابط الفيديو\n"
+            "3- سيقوم البوت بتنزيله"
+        )
+
+
+# استقبال الروابط
+async def handle_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    url = update.message.text
+
+    await update.message.reply_text("⏳ جاري التحميل...")
 
     try:
-        if action == "video":
-            file = download_video(url)
-            await context.bot.send_video(
-                chat_id=query.message.chat.id,
-                video=open(file, "rb")
-            )
 
-        elif action == "audio":
-            file = download_audio(url)
-            await context.bot.send_audio(
-                chat_id=query.message.chat.id,
-                audio=open(file, "rb")
-            )
+        file = download_media(url)
+
+        await update.message.reply_video(
+            video=open(file, "rb")
+        )
 
         os.remove(file)
 
     except Exception as e:
-        await context.bot.send_message(
-            chat_id=query.message.chat.id,
-            text=f"❌ فشل التحميل\nخطأ: {str(e)}"
-        )
 
-# --- تشغيل البوت مباشرة بدون asyncio.run() ---
-if __name__ == "__main__":
+        await update.message.reply_text("❌ فشل التحميل")
+
+
+def main():
+
     if not os.path.exists("downloads"):
         os.makedirs("downloads")
 
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.add_handler(CallbackQueryHandler(button))
+    app.add_handler(CallbackQueryHandler(buttons))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_link))
 
-    print("Bot Started...")
-    app.run_polling()  # <-- هنا نبدأ البوت مباشرة بدون asyncio.run()
+    print("Bot Running...")
+    app.run_polling()
+
+
+if __name__ == "__main__":
+    main()
