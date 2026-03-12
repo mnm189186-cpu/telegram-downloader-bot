@@ -1,5 +1,4 @@
 import os
-import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 
@@ -52,7 +51,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 audio=open(file, "rb")
             )
 
-        # حذف الملف بعد الإرسال
         os.remove(file)
 
     except Exception as e:
@@ -61,8 +59,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text=f"❌ فشل التحميل\nخطأ: {str(e)}"
         )
 
-# --- تشغيل البوت ---
-async def main():
+# --- تشغيل البوت مباشرة بدون asyncio.run() ---
+if __name__ == "__main__":
     if not os.path.exists("downloads"):
         os.makedirs("downloads")
 
@@ -73,7 +71,4 @@ async def main():
     app.add_handler(CallbackQueryHandler(button))
 
     print("Bot Started...")
-    await app.run_polling()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    app.run_polling()  # <-- هنا نبدأ البوت مباشرة بدون asyncio.run()
