@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 
 # Telegram
-BOT_TOKEN = os.getenv("BOT_TOKEN", "REPLACE_WITH_YOUR_BOT_TOKEN")
+BOT_TOKEN = os.getenv("8727487234:AAFxv4TwkBjflhPOSy1qHicoMsNVeWJ8bEw", "REPLACE_WITH_YOUR_BOT_TOKEN")
 
 # Optional YouTube API Key (for Data API search). If empty, yt-dlp search used.
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
