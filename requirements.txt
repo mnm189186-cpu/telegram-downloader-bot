@@ -1,2 +1,7 @@
-python-telegram-bot
-yt-dlp
+python-telegram-bot==20.7
+yt-dlp==2024.12.01
+aiohttp==3.8.4
+apscheduler==3.9.1
+pydub==0.25.1
+python-dotenv==1.0.0
+sqlalchemy==2.0.19
